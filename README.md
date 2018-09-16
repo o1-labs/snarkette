@@ -12,3 +12,6 @@ In the service of the Groth-Maller SNARK verifier, it implements the following p
 - Degree 6 field extensions
 - Weierstrass curves over arbitrary fields
 - The ate pairing
+
+The code has not yet undergone extensive review or testing and as such should not
+be used in critical systems.
