@@ -1,59 +1,10 @@
 open Core_kernel
-
-module N : sig
-  include Nat_intf.S
-end = struct
-  type t = Big_int.big_int
-
-  let equal = Big_int.eq_big_int
-
-  let ( + ) = Big_int.add_big_int
-
-  let ( - ) = Big_int.sub_big_int
-
-  let ( * ) = Big_int.mult_big_int
-
-  let ( % ) = Big_int.mod_big_int
-
-  let ( // ) = Big_int.div_big_int
-
-  let ( < ) = Big_int.lt_big_int
-
-  let of_int = Big_int.big_int_of_int
-
-  let to_int_exn = Big_int.int_of_big_int
-
-  let num_bits = Big_int.num_bits_big_int
-
-  let shift_right = Big_int.shift_right_big_int
-
-  let shift_left = Big_int.shift_left_big_int
-
-  let log_and = Big_int.and_big_int
-
-  let log_or = Big_int.or_big_int
-
-  let test_bit t i =
-    equal (log_and Big_int.unit_big_int (shift_right t i)) Big_int.unit_big_int
-
-  module T = struct
-    type nonrec t = t
-
-    let of_string = Big_int.big_int_of_string
-
-    let to_string = Big_int.string_of_big_int
-  end
-
-  include (T : Stringable.S with type t := t)
-
-  include Binable.Of_stringable (T)
-  include Sexpable.Of_stringable (T)
-end
-
 open Fields
+module N = Nat
 
 module Fq =
-  Make_fp (N)
+  Make_fp
+    (N)
     (struct
       let order =
         N.of_string
@@ -62,49 +13,54 @@ module Fq =
 
 let non_residue = Fq.of_int 5
 
-module Fq3 =
-  Make_fp3 (Fq)
-    (struct
-      let non_residue = non_residue
+module Fq3 = struct
+  module Params = struct
+    let non_residue = non_residue
 
-      let frobenius_coeffs_c1 =
-        [| Fq.of_string "1"
-        ; Fq.of_string
-            "471738898967521029133040851318449165997304108729558973770077319830005517129946578866686956"
-        ; Fq.of_string
-            "4183387201740296620308398334599285547820769823264541783190415909159130177461911693276180"
-        |]
+    let frobenius_coeffs_c1 =
+      [| Fq.of_string "1"
+       ; Fq.of_string
+           "471738898967521029133040851318449165997304108729558973770077319830005517129946578866686956"
+       ; Fq.of_string
+           "4183387201740296620308398334599285547820769823264541783190415909159130177461911693276180"
+      |]
 
-      let frobenius_coeffs_c2 =
-        [| Fq.of_string "1"
-        ; Fq.of_string
-            "4183387201740296620308398334599285547820769823264541783190415909159130177461911693276180"
-        ; Fq.of_string
-            "471738898967521029133040851318449165997304108729558973770077319830005517129946578866686956"
-        |]
-    end)
+    let frobenius_coeffs_c2 =
+      [| Fq.of_string "1"
+       ; Fq.of_string
+           "4183387201740296620308398334599285547820769823264541783190415909159130177461911693276180"
+       ; Fq.of_string
+           "471738898967521029133040851318449165997304108729558973770077319830005517129946578866686956"
+      |]
+  end
+
+  include Make_fp3 (Fq) (Params)
+end
 
 module Fq2 =
-  Make_fp2 (Fq)
+  Make_fp2
+    (Fq)
     (struct
       let non_residue = non_residue
     end)
 
-module Fq6 =
-  Make_fp6 (N) (Fq) (Fq2) (Fq3)
-    (struct
-      let non_residue = non_residue
+module Fq6 = struct
+  module Params = struct
+    let non_residue = non_residue
 
-      let frobenius_coeffs_c1 =
-        Array.map ~f:Fq.of_string
-          [| "1"
-          ; "471738898967521029133040851318449165997304108729558973770077319830005517129946578866686957"
-          ; "471738898967521029133040851318449165997304108729558973770077319830005517129946578866686956"
-          ; "475922286169261325753349249653048451545124878552823515553267735739164647307408490559963136"
-          ; "4183387201740296620308398334599285547820769823264541783190415909159130177461911693276180"
-          ; "4183387201740296620308398334599285547820769823264541783190415909159130177461911693276181"
-          |]
-    end)
+    let frobenius_coeffs_c1 =
+      Array.map ~f:Fq.of_string
+        [| "1"
+         ; "471738898967521029133040851318449165997304108729558973770077319830005517129946578866686957"
+         ; "471738898967521029133040851318449165997304108729558973770077319830005517129946578866686956"
+         ; "475922286169261325753349249653048451545124878552823515553267735739164647307408490559963136"
+         ; "4183387201740296620308398334599285547820769823264541783190415909159130177461911693276180"
+         ; "4183387201740296620308398334599285547820769823264541783190415909159130177461911693276181"
+        |]
+  end
+
+  include Make_fp6 (N) (Fq) (Fq2) (Fq3) (Params)
+end
 
 module G1 = struct
   include Elliptic_curve.Make (N) (Fq)
